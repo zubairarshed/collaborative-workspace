@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\MembershipRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -46,5 +49,75 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Workspaces this user owns.
+     *
+     * @return HasMany<Workspace, $this>
+     */
+    public function ownedWorkspaces(): HasMany
+    {
+        return $this->hasMany(Workspace::class, 'owner_id');
+    }
+
+    /**
+     * Membership records linking this user to workspaces.
+     *
+     * @return HasMany<Membership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * Workspaces this user belongs to via memberships.
+     *
+     * @return BelongsToMany<Workspace, $this>
+     */
+    public function workspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'memberships')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Invitations this user has sent.
+     *
+     * @return HasMany<Invitation, $this>
+     */
+    public function sentInvitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class, 'invited_by');
+    }
+
+    /**
+     * Get this user's membership for a workspace, if any.
+     */
+    public function membershipFor(Workspace $workspace): ?Membership
+    {
+        return $this->memberships()
+            ->where('workspace_id', $workspace->id)
+            ->first();
+    }
+
+    /**
+     * Get this user's role within a workspace, if they belong to it.
+     */
+    public function roleIn(Workspace $workspace): ?MembershipRole
+    {
+        return $this->membershipFor($workspace)?->role;
+    }
+
+    /**
+     * Determine whether this user belongs to a workspace.
+     */
+    public function belongsToWorkspace(Workspace $workspace): bool
+    {
+        return $this->memberships()
+            ->where('workspace_id', $workspace->id)
+            ->exists();
     }
 }
