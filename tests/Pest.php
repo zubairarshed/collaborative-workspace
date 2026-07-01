@@ -15,7 +15,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -44,7 +44,24 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Enums\MembershipRole;
+use App\Models\Membership;
+use App\Models\User;
+use App\Models\Workspace;
+
+function createWorkspaceFor(User $owner, array $attributes = []): Workspace
 {
-    // ..
+    return Workspace::factory()->create([
+        'owner_id' => $owner->id,
+        ...$attributes,
+    ]);
+}
+
+function addWorkspaceMember(Workspace $workspace, User $user, MembershipRole $role): Membership
+{
+    return Membership::factory()->create([
+        'workspace_id' => $workspace->id,
+        'user_id' => $user->id,
+        'role' => $role,
+    ]);
 }
