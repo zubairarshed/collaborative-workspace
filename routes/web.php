@@ -1,16 +1,46 @@
 <?php
 
+use App\Http\Controllers\BoardColumnController;
+use App\Http\Controllers\BoardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->scopeBindings()->group(function () {
     Route::get('dashboard', [WorkspaceController::class, 'index'])->name('dashboard');
 
     Route::resource('workspaces', WorkspaceController::class)->only(['store', 'show', 'update', 'destroy']);
+
+    Route::resource('workspaces.boards', BoardController::class)
+        ->only(['store', 'show', 'update', 'destroy'])
+        ->scoped(['board' => 'slug']);
+
+    Route::patch('workspaces/{workspace}/boards/{board}/archive', [BoardController::class, 'archive'])
+        ->name('workspaces.boards.archive');
+
+    Route::post('workspaces/{workspace}/boards/{board}/columns', [BoardColumnController::class, 'store'])
+        ->name('workspaces.boards.columns.store');
+    Route::patch('workspaces/{workspace}/boards/{board}/columns/reorder', [BoardColumnController::class, 'reorder'])
+        ->name('workspaces.boards.columns.reorder');
+    Route::patch('workspaces/{workspace}/boards/{board}/columns/{column}', [BoardColumnController::class, 'update'])
+        ->name('workspaces.boards.columns.update');
+    Route::delete('workspaces/{workspace}/boards/{board}/columns/{column}', [BoardColumnController::class, 'destroy'])
+        ->name('workspaces.boards.columns.destroy');
+
+    Route::post('workspaces/{workspace}/boards/{board}/columns/{column}/tasks', [TaskController::class, 'store'])
+        ->name('workspaces.boards.columns.tasks.store');
+    Route::patch('workspaces/{workspace}/boards/{board}/tasks/{task}', [TaskController::class, 'update'])
+        ->name('workspaces.boards.tasks.update');
+    Route::patch('workspaces/{workspace}/boards/{board}/tasks/{task}/move', [TaskController::class, 'move'])
+        ->name('workspaces.boards.tasks.move');
+    Route::patch('workspaces/{workspace}/boards/{board}/tasks/{task}/archive', [TaskController::class, 'archive'])
+        ->name('workspaces.boards.tasks.archive');
+    Route::delete('workspaces/{workspace}/boards/{board}/tasks/{task}', [TaskController::class, 'destroy'])
+        ->name('workspaces.boards.tasks.destroy');
 
     Route::post('workspaces/{workspace}/invitations', [InvitationController::class, 'store'])
         ->name('workspaces.invitations.store');

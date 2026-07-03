@@ -23,8 +23,10 @@ import InviteMemberForm from '@/components/workspaces/InviteMemberForm.vue';
 import MembersTable from '@/components/workspaces/MembersTable.vue';
 import PendingInvitations from '@/components/workspaces/PendingInvitations.vue';
 import RoleBadge from '@/components/workspaces/RoleBadge.vue';
+import BoardsList from '@/components/boards/BoardsList.vue';
 import { dashboard } from '@/routes';
 import type {
+    BoardListItem,
     MembershipRole,
     Workspace,
     WorkspaceAbilities,
@@ -37,6 +39,7 @@ const props = defineProps<{
     role: MembershipRole;
     members: WorkspaceMember[];
     invitations: WorkspaceInvitation[];
+    boards: BoardListItem[];
     can: WorkspaceAbilities;
 }>();
 
@@ -46,10 +49,15 @@ defineOptions({
     },
 });
 
-type Tab = 'overview' | 'members' | 'invitations';
+type Tab = 'overview' | 'boards' | 'members' | 'invitations';
 
 const tabs = computed<{ id: Tab; label: string; visible: boolean }[]>(() => [
     { id: 'overview', label: 'Overview', visible: true },
+    {
+        id: 'boards',
+        label: `Boards (${props.boards.length})`,
+        visible: true,
+    },
     {
         id: 'members',
         label: `Members (${props.members.length})`,
@@ -195,8 +203,14 @@ function deleteWorkspace() {
 
         <div
             v-show="activeTab === 'overview'"
-            class="grid gap-4 sm:grid-cols-3"
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
         >
+            <div class="rounded-xl border p-4">
+                <div class="text-sm text-muted-foreground">Boards</div>
+                <div class="mt-1 text-2xl font-semibold">
+                    {{ boards.length }}
+                </div>
+            </div>
             <div class="rounded-xl border p-4">
                 <div class="text-sm text-muted-foreground">Members</div>
                 <div class="mt-1 text-2xl font-semibold">
@@ -217,6 +231,14 @@ function deleteWorkspace() {
                     <RoleBadge :role="role" />
                 </div>
             </div>
+        </div>
+
+        <div v-show="activeTab === 'boards'">
+            <BoardsList
+                :workspace-id="workspace.id"
+                :boards="boards"
+                :can-create="can.createBoard"
+            />
         </div>
 
         <div v-show="activeTab === 'members'">

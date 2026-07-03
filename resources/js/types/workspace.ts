@@ -55,6 +55,7 @@ export type WorkspaceAbilities = {
     update: boolean;
     delete: boolean;
     manageMembers: boolean;
+    createBoard: boolean;
 };
 
 export type InvitationPreview = {

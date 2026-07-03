@@ -7,6 +7,7 @@ use App\Actions\Workspaces\DeleteWorkspace;
 use App\Actions\Workspaces\UpdateWorkspace;
 use App\Http\Requests\StoreWorkspaceRequest;
 use App\Http\Requests\UpdateWorkspaceRequest;
+use App\Models\Board;
 use App\Models\Invitation;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
@@ -117,6 +118,18 @@ class WorkspaceController extends Controller
                 'created_at' => $invitation->created_at,
             ]);
 
+        $boards = $workspace->boards()
+            ->orderBy('position')
+            ->get()
+            ->map(fn (Board $board) => [
+                'id' => $board->id,
+                'name' => $board->name,
+                'slug' => $board->slug,
+                'description' => $board->description,
+                'is_archived' => $board->is_archived,
+                'position' => $board->position,
+            ]);
+
         return Inertia::render('workspaces/Show', [
             'workspace' => [
                 'id' => $workspace->id,
@@ -128,10 +141,12 @@ class WorkspaceController extends Controller
             'role' => $role,
             'members' => $members,
             'invitations' => $invitations,
+            'boards' => $boards,
             'can' => [
                 'update' => $user->can('update', $workspace),
                 'delete' => $user->can('delete', $workspace),
                 'manageMembers' => $user->can('create', [Invitation::class, $workspace]),
+                'createBoard' => $user->can('create', [Board::class, $workspace]),
             ],
         ]);
     }
