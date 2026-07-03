@@ -94,6 +94,26 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * Tasks this user has created.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by');
+    }
+
+    /**
+     * Tasks currently assigned to this user.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
+    /**
      * Get this user's membership for a workspace, if any.
      */
     public function membershipFor(Workspace $workspace): ?Membership

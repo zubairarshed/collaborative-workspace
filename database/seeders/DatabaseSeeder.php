@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             WorkspaceSeeder::class,
             MembershipSeeder::class,
             InvitationSeeder::class,
+            BoardSeeder::class,
+            TaskSeeder::class,
         ]);
     }
 }
