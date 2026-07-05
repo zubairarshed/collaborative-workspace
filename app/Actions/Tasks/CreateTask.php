@@ -3,6 +3,7 @@
 namespace App\Actions\Tasks;
 
 use App\Enums\TaskPriority;
+use App\Events\Tasks\TaskCreated;
 use App\Models\BoardColumn;
 use App\Models\Task;
 use App\Models\User;
@@ -28,7 +29,7 @@ class CreateTask
             $priority = TaskPriority::from($priority);
         }
 
-        return $column->tasks()->create([
+        $task = $column->tasks()->create([
             'board_id' => $column->board_id,
             'created_by' => $creator->id,
             'title' => $data['title'],
@@ -38,5 +39,9 @@ class CreateTask
             'assignee_id' => $data['assignee_id'] ?? null,
             'position' => ($column->tasks()->max('position') ?? -1) + 1,
         ]);
+
+        event(new TaskCreated($task, $creator));
+
+        return $task;
     }
 }

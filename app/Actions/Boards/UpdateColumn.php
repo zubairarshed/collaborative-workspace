@@ -2,7 +2,9 @@
 
 namespace App\Actions\Boards;
 
+use App\Events\Boards\ColumnUpdated;
 use App\Models\BoardColumn;
+use App\Models\User;
 
 class UpdateColumn
 {
@@ -13,7 +15,7 @@ class UpdateColumn
      *
      * @param  array{name?: string, wip_limit?: int|null}  $data
      */
-    public function handle(BoardColumn $column, array $data): BoardColumn
+    public function handle(BoardColumn $column, User $actor, array $data): BoardColumn
     {
         $column->fill(array_filter(
             [
@@ -24,7 +26,12 @@ class UpdateColumn
             ARRAY_FILTER_USE_BOTH,
         ));
 
+        $changedFields = array_keys($column->getDirty());
         $column->save();
+
+        if ($changedFields !== []) {
+            event(new ColumnUpdated($column, $actor, $changedFields));
+        }
 
         return $column;
     }

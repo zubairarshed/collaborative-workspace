@@ -2,6 +2,8 @@
 
 namespace App\Actions\Workspaces;
 
+use App\Events\Workspaces\WorkspaceUpdated;
+use App\Models\User;
 use App\Models\Workspace;
 
 class UpdateWorkspace
@@ -13,7 +15,7 @@ class UpdateWorkspace
      *
      * @param  array{name?: string, description?: string|null}  $data
      */
-    public function handle(Workspace $workspace, array $data): Workspace
+    public function handle(Workspace $workspace, User $actor, array $data): Workspace
     {
         $workspace->fill(array_filter(
             [
@@ -24,7 +26,12 @@ class UpdateWorkspace
             ARRAY_FILTER_USE_BOTH,
         ));
 
+        $changedFields = array_keys($workspace->getDirty());
         $workspace->save();
+
+        if ($changedFields !== []) {
+            event(new WorkspaceUpdated($workspace, $actor, $changedFields));
+        }
 
         return $workspace;
     }

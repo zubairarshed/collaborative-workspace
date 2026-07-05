@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Invitations\AcceptInvitation;
+use App\Actions\Invitations\CancelInvitation;
 use App\Actions\Invitations\InviteMember;
 use App\Enums\MembershipRole;
 use App\Http\Requests\StoreInvitationRequest;
@@ -79,13 +80,13 @@ class InvitationController extends Controller
     /**
      * Cancel (delete) a pending invitation.
      */
-    public function destroy(Invitation $invitation): RedirectResponse
+    public function destroy(Request $request, Invitation $invitation, CancelInvitation $action): RedirectResponse
     {
         Gate::authorize('delete', $invitation);
 
         $workspaceId = $invitation->workspace_id;
 
-        $invitation->delete();
+        $action->handle($invitation, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Invitation cancelled.')]);
 

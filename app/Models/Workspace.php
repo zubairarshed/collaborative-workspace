@@ -97,4 +97,14 @@ class Workspace extends Model
     {
         return $this->hasManyThrough(Task::class, Board::class);
     }
+
+    /**
+     * Activity log entries for this workspace, newest first.
+     *
+     * @return HasMany<Activity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class)->latest();
+    }
 }

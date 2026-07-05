@@ -158,7 +158,7 @@ class WorkspaceController extends Controller
     {
         Gate::authorize('update', $workspace);
 
-        $action->handle($workspace, $request->validated());
+        $action->handle($workspace, $request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Workspace updated.')]);
 
@@ -168,11 +168,11 @@ class WorkspaceController extends Controller
     /**
      * Delete a workspace.
      */
-    public function destroy(Workspace $workspace, DeleteWorkspace $action): RedirectResponse
+    public function destroy(Request $request, Workspace $workspace, DeleteWorkspace $action): RedirectResponse
     {
         Gate::authorize('delete', $workspace);
 
-        $action->handle($workspace);
+        $action->handle($workspace, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Workspace deleted.')]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Invitations;
 
+use App\Events\Memberships\MemberJoined;
 use App\Models\Invitation;
 use App\Models\Membership;
 use App\Models\User;
@@ -33,7 +34,7 @@ class AcceptInvitation
             ]);
         }
 
-        return DB::transaction(function () use ($invitation, $user): Membership {
+        $membership = DB::transaction(function () use ($invitation, $user): Membership {
             $membership = Membership::updateOrCreate(
                 ['workspace_id' => $invitation->workspace_id, 'user_id' => $user->id],
                 ['role' => $invitation->role, 'joined_at' => now()],
@@ -43,6 +44,11 @@ class AcceptInvitation
 
             return $membership;
         });
+
+        $membership->setRelation('user', $user);
+        event(new MemberJoined($membership));
+
+        return $membership;
     }
 
     private function isPending(Invitation $invitation): bool

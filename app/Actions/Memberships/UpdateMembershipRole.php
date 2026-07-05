@@ -3,7 +3,9 @@
 namespace App\Actions\Memberships;
 
 use App\Enums\MembershipRole;
+use App\Events\Memberships\MemberRoleChanged;
 use App\Models\Membership;
+use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class UpdateMembershipRole
@@ -16,7 +18,7 @@ class UpdateMembershipRole
      *
      * @throws ValidationException
      */
-    public function handle(Membership $membership, MembershipRole $role): Membership
+    public function handle(Membership $membership, User $actor, MembershipRole $role): Membership
     {
         if ($membership->user_id === $membership->workspace->owner_id) {
             throw ValidationException::withMessages([
@@ -30,7 +32,12 @@ class UpdateMembershipRole
             ]);
         }
 
+        $oldRole = $membership->role;
         $membership->update(['role' => $role]);
+
+        if ($oldRole !== $role) {
+            event(new MemberRoleChanged($membership, $actor, $oldRole, $role));
+        }
 
         return $membership;
     }

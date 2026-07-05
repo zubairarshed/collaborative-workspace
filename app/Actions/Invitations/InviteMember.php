@@ -3,6 +3,7 @@
 namespace App\Actions\Invitations;
 
 use App\Enums\MembershipRole;
+use App\Events\Memberships\MemberInvited;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Models\Workspace;
@@ -40,12 +41,16 @@ class InviteMember
             ]);
         }
 
-        return $workspace->invitations()->create([
+        $invitation = $workspace->invitations()->create([
             'invited_by' => $inviter->id,
             'email' => $email,
             'role' => $role,
             'token' => Str::random(40),
             'expires_at' => now()->addDays(self::EXPIRY_DAYS),
         ]);
+
+        event(new MemberInvited($invitation, $inviter));
+
+        return $invitation;
     }
 }

@@ -22,6 +22,7 @@ class MembershipController extends Controller
 
         $action->handle(
             $membership,
+            $request->user(),
             MembershipRole::from($request->validated('role')),
         );
 
@@ -40,7 +41,7 @@ class MembershipController extends Controller
         $isSelf = $membership->user_id === request()->user()->id;
         $workspaceId = $membership->workspace_id;
 
-        $action->handle($membership);
+        $action->handle($membership, request()->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $isSelf ? __('You left the workspace.') : __('Member removed.')]);
 

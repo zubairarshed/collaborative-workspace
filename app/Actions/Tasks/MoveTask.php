@@ -2,8 +2,10 @@
 
 namespace App\Actions\Tasks;
 
+use App\Events\Tasks\TaskMoved;
 use App\Models\BoardColumn;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -18,7 +20,7 @@ class MoveTask
     /**
      * Move a task to another column and/or position within the same board.
      */
-    public function handle(Task $task, BoardColumn $targetColumn, ?int $position = null): Task
+    public function handle(Task $task, User $actor, BoardColumn $targetColumn, ?int $position = null): Task
     {
         if ($targetColumn->board_id !== $task->board_id) {
             throw ValidationException::withMessages([
@@ -26,7 +28,9 @@ class MoveTask
             ]);
         }
 
-        return DB::transaction(function () use ($task, $targetColumn, $position): Task {
+        $sourceColumn = $task->column;
+
+        $moved = DB::transaction(function () use ($task, $targetColumn, $position): Task {
             $sourceColumn = $task->column;
             $movingWithinSameColumn = $sourceColumn->is($targetColumn);
 
@@ -66,5 +70,11 @@ class MoveTask
 
             return $task->fresh();
         });
+
+        if (! $sourceColumn->is($targetColumn)) {
+            event(new TaskMoved($moved, $actor, $sourceColumn, $targetColumn));
+        }
+
+        return $moved;
     }
 }
