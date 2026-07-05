@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\BoardColumnController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\InvitationController;
@@ -14,6 +15,9 @@ Route::middleware(['auth', 'verified'])->scopeBindings()->group(function () {
     Route::get('dashboard', [WorkspaceController::class, 'index'])->name('dashboard');
 
     Route::resource('workspaces', WorkspaceController::class)->only(['store', 'show', 'update', 'destroy']);
+
+    Route::get('workspaces/{workspace}/activity', [ActivityController::class, 'index'])
+        ->name('workspaces.activity');
 
     Route::resource('workspaces.boards', BoardController::class)
         ->only(['store', 'show', 'update', 'destroy'])

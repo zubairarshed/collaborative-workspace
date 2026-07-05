@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
-import { Pencil, Trash2 } from '@lucide/vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { History, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { index as activityIndex } from '@/actions/App/Http/Controllers/ActivityController';
 import {
     destroy,
     update,
@@ -118,6 +119,13 @@ function deleteWorkspace() {
             </div>
 
             <div class="flex items-center gap-2">
+                <Button as-child variant="outline">
+                    <Link :href="activityIndex.url(workspace.id)">
+                        <History class="size-4" />
+                        Activity
+                    </Link>
+                </Button>
+
                 <Dialog v-if="can.update" v-model:open="editOpen">
                     <DialogTrigger as-child>
                         <Button variant="outline">

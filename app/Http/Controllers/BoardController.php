@@ -129,7 +129,7 @@ class BoardController extends Controller
     {
         Gate::authorize('update', $board);
 
-        $action->handle($board, $request->validated());
+        $action->handle($board, $request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Board updated.')]);
 
@@ -145,7 +145,7 @@ class BoardController extends Controller
 
         $archived = $request->boolean('archived', true);
 
-        $action->handle($board, $archived);
+        $action->handle($board, $request->user(), $archived);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -158,11 +158,11 @@ class BoardController extends Controller
     /**
      * Soft-delete a board.
      */
-    public function destroy(Workspace $workspace, Board $board, DeleteBoard $action): RedirectResponse
+    public function destroy(Request $request, Workspace $workspace, Board $board, DeleteBoard $action): RedirectResponse
     {
         Gate::authorize('delete', $board);
 
-        $action->handle($board);
+        $action->handle($board, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Board deleted.')]);
 

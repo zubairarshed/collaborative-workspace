@@ -2,7 +2,9 @@
 
 namespace App\Actions\Boards;
 
+use App\Events\Boards\ColumnDeleted;
 use App\Models\BoardColumn;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,7 +17,7 @@ class DeleteColumn
      *
      * @throws ValidationException
      */
-    public function handle(BoardColumn $column): void
+    public function handle(BoardColumn $column, User $actor): void
     {
         $board = $column->board;
 
@@ -37,5 +39,7 @@ class DeleteColumn
                     }
                 });
         });
+
+        event(new ColumnDeleted($column, $board, $actor));
     }
 }

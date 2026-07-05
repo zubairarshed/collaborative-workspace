@@ -2,7 +2,9 @@
 
 namespace App\Actions\Tasks;
 
+use App\Events\Tasks\TaskDeleted;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DeleteTask
@@ -16,7 +18,7 @@ class DeleteTask
     /**
      * Soft-delete a task and compact the remaining positions in its column.
      */
-    public function handle(Task $task): void
+    public function handle(Task $task, User $actor): void
     {
         DB::transaction(function () use ($task): void {
             $column = $task->column;
@@ -36,5 +38,7 @@ class DeleteTask
                 $remainingTask->update(['position' => $index]);
             }
         });
+
+        event(new TaskDeleted($task, $actor));
     }
 }

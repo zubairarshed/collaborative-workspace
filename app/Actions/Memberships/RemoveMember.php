@@ -2,7 +2,9 @@
 
 namespace App\Actions\Memberships;
 
+use App\Events\Memberships\MemberRemoved;
 use App\Models\Membership;
+use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class RemoveMember
@@ -15,7 +17,7 @@ class RemoveMember
      *
      * @throws ValidationException
      */
-    public function handle(Membership $membership): void
+    public function handle(Membership $membership, User $actor): void
     {
         if ($membership->user_id === $membership->workspace->owner_id) {
             throw ValidationException::withMessages([
@@ -23,6 +25,9 @@ class RemoveMember
             ]);
         }
 
+        $membership->loadMissing('user');
         $membership->delete();
+
+        event(new MemberRemoved($membership, $actor));
     }
 }

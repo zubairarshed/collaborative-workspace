@@ -2,7 +2,9 @@
 
 namespace App\Actions\Boards;
 
+use App\Events\Boards\BoardUpdated;
 use App\Models\Board;
+use App\Models\User;
 
 class UpdateBoard
 {
@@ -13,7 +15,7 @@ class UpdateBoard
      *
      * @param  array{name?: string, description?: string|null}  $data
      */
-    public function handle(Board $board, array $data): Board
+    public function handle(Board $board, User $actor, array $data): Board
     {
         $board->fill(array_filter(
             [
@@ -24,7 +26,12 @@ class UpdateBoard
             ARRAY_FILTER_USE_BOTH,
         ));
 
+        $changedFields = array_keys($board->getDirty());
         $board->save();
+
+        if ($changedFields !== []) {
+            event(new BoardUpdated($board, $actor, $changedFields));
+        }
 
         return $board;
     }

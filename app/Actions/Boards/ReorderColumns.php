@@ -2,7 +2,9 @@
 
 namespace App\Actions\Boards;
 
+use App\Events\Boards\ColumnsReordered;
 use App\Models\Board;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class ReorderColumns
@@ -21,7 +23,7 @@ class ReorderColumns
      *
      * @param  list<int>  $orderedIds
      */
-    public function handle(Board $board, array $orderedIds): void
+    public function handle(Board $board, User $actor, array $orderedIds): void
     {
         DB::transaction(function () use ($board, $orderedIds): void {
             $columns = $board->columns()->get()->keyBy('id');
@@ -44,5 +46,7 @@ class ReorderColumns
                 $columns[$id]->update(['position' => $index]);
             }
         });
+
+        event(new ColumnsReordered($board, $actor));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Boards;
 
+use App\Events\Boards\BoardCreated;
 use App\Models\Board;
 use App\Models\User;
 use App\Models\Workspace;
@@ -17,7 +18,7 @@ class CreateBoard
      */
     public function handle(Workspace $workspace, User $creator, array $data): Board
     {
-        return DB::transaction(function () use ($workspace, $creator, $data): Board {
+        $board = DB::transaction(function () use ($workspace, $creator, $data): Board {
             $board = $workspace->boards()->create([
                 'created_by' => $creator->id,
                 'name' => $data['name'],
@@ -30,6 +31,10 @@ class CreateBoard
 
             return $board;
         });
+
+        event(new BoardCreated($board, $creator));
+
+        return $board;
     }
 
     /**

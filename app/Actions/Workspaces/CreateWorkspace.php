@@ -2,6 +2,7 @@
 
 namespace App\Actions\Workspaces;
 
+use App\Events\Workspaces\WorkspaceCreated;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Str;
@@ -18,12 +19,16 @@ class CreateWorkspace
      */
     public function handle(User $owner, array $data): Workspace
     {
-        return Workspace::create([
+        $workspace = Workspace::create([
             'name' => $data['name'],
             'slug' => $this->uniqueSlug($data['name']),
             'description' => $data['description'] ?? null,
             'owner_id' => $owner->id,
         ]);
+
+        event(new WorkspaceCreated($workspace, $owner));
+
+        return $workspace;
     }
 
     /**

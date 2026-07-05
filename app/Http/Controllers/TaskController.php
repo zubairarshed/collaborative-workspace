@@ -52,7 +52,7 @@ class TaskController extends Controller
     ): RedirectResponse {
         Gate::authorize('update', $task);
 
-        $action->handle($task, $request->validated());
+        $action->handle($task, $request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Task updated.')]);
 
@@ -71,7 +71,7 @@ class TaskController extends Controller
     ): RedirectResponse {
         Gate::authorize('move', $task);
 
-        $action->handle($task, $request->targetColumn(), $request->targetPosition());
+        $action->handle($task, $request->user(), $request->targetColumn(), $request->targetPosition());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Task moved.')]);
 
@@ -92,7 +92,7 @@ class TaskController extends Controller
 
         $archived = $request->boolean('archived', true);
 
-        $action->handle($task, $archived);
+        $action->handle($task, $request->user(), $archived);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -106,6 +106,7 @@ class TaskController extends Controller
      * Soft-delete a task.
      */
     public function destroy(
+        Request $request,
         Workspace $workspace,
         Board $board,
         Task $task,
@@ -113,7 +114,7 @@ class TaskController extends Controller
     ): RedirectResponse {
         Gate::authorize('delete', $task);
 
-        $action->handle($task);
+        $action->handle($task, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Task deleted.')]);
 

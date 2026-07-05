@@ -13,6 +13,7 @@ use App\Models\Board;
 use App\Models\BoardColumn;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -25,7 +26,7 @@ class BoardColumnController extends Controller
     {
         Gate::authorize('create', [BoardColumn::class, $board]);
 
-        $action->handle($board, $request->validated());
+        $action->handle($board, $request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Column added.')]);
 
@@ -39,7 +40,7 @@ class BoardColumnController extends Controller
     {
         Gate::authorize('update', $column);
 
-        $action->handle($column, $request->validated());
+        $action->handle($column, $request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Column updated.')]);
 
@@ -53,7 +54,7 @@ class BoardColumnController extends Controller
     {
         Gate::authorize('reorder', [BoardColumn::class, $board]);
 
-        $action->handle($board, $request->orderedColumnIds());
+        $action->handle($board, $request->user(), $request->orderedColumnIds());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Columns reordered.')]);
 
@@ -63,11 +64,11 @@ class BoardColumnController extends Controller
     /**
      * Delete a column.
      */
-    public function destroy(Workspace $workspace, Board $board, BoardColumn $column, DeleteColumn $action): RedirectResponse
+    public function destroy(Request $request, Workspace $workspace, Board $board, BoardColumn $column, DeleteColumn $action): RedirectResponse
     {
         Gate::authorize('delete', $column);
 
-        $action->handle($column);
+        $action->handle($column, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Column deleted.')]);
 
