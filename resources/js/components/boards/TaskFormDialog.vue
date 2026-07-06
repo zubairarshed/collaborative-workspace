@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
+import { store as storeComment } from '@/actions/App/Http/Controllers/CommentController';
 import {
     store,
     update,
@@ -75,6 +76,39 @@ watch(
         form.reset();
     },
 );
+
+const commentForm = useForm({
+    body: '',
+});
+
+function formatDateTime(value: string): string {
+    return new Date(value).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+}
+
+function submitComment() {
+    if (!props.task) {
+        return;
+    }
+
+    commentForm.post(
+        storeComment.url({
+            workspace: props.workspaceId,
+            board: props.boardId,
+            task: props.task.id,
+        }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                commentForm.reset();
+            },
+        },
+    );
+}
 
 function submit() {
     const payload = {
@@ -228,6 +262,42 @@ function submit() {
                     </Button>
                 </DialogFooter>
             </form>
+
+            <div v-if="mode === 'edit' && task" class="flex flex-col gap-3 border-t pt-4">
+                <h3 class="text-sm font-medium">Comments</h3>
+
+                <ul v-if="task.comments.length > 0" class="flex flex-col gap-3">
+                    <li v-for="comment in task.comments" :key="comment.id" class="text-sm">
+                        <div class="flex items-baseline gap-2">
+                            <span class="font-medium">
+                                {{ comment.author?.name ?? 'Former member' }}
+                            </span>
+                            <span class="text-xs text-muted-foreground">
+                                {{ formatDateTime(comment.created_at) }}
+                            </span>
+                        </div>
+                        <p class="text-muted-foreground">{{ comment.body }}</p>
+                    </li>
+                </ul>
+                <p v-else class="text-sm text-muted-foreground">No comments yet.</p>
+
+                <form class="flex flex-col gap-2" @submit.prevent="submitComment">
+                    <Input
+                        v-model="commentForm.body"
+                        placeholder="Write a comment"
+                    />
+                    <InputError :message="commentForm.errors.body" />
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        class="self-start"
+                        :disabled="commentForm.processing"
+                    >
+                        Add comment
+                    </Button>
+                </form>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

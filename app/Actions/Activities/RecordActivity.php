@@ -6,12 +6,14 @@ use App\Enums\ActivityType;
 use App\Models\Activity;
 use App\Models\Board;
 use App\Models\BoardColumn;
+use App\Models\Comment;
 use App\Models\Invitation;
 use App\Models\Membership;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class RecordActivity
 {
@@ -46,6 +48,7 @@ class RecordActivity
             $subject instanceof Board => $subject->name,
             $subject instanceof BoardColumn => $subject->name,
             $subject instanceof Task => $subject->title,
+            $subject instanceof Comment => Str::limit($subject->body, 60),
             $subject instanceof Membership => $subject->user->name,
             $subject instanceof Invitation => $subject->email,
             default => class_basename($subject),

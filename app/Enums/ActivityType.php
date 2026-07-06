@@ -27,6 +27,8 @@ enum ActivityType: string
     case TaskArchivalToggled = 'task.archival_toggled';
     case TaskDeleted = 'task.deleted';
 
+    case CommentAdded = 'comment.added';
+
     case MemberInvited = 'member.invited';
     case InvitationCancelled = 'invitation.cancelled';
     case MemberJoined = 'member.joined';
@@ -69,6 +71,8 @@ enum ActivityType: string
                 ? "{$causer} archived the task \"{$subject}\"."
                 : "{$causer} restored the task \"{$subject}\".",
             self::TaskDeleted => "{$causer} deleted the task \"{$subject}\".",
+
+            self::CommentAdded => "{$causer} commented on \"{$data['task_title']}\": \"{$subject}\"",
 
             self::MemberInvited => "{$causer} invited {$subject} to the workspace as {$data['role']}.",
             self::InvitationCancelled => "{$causer} cancelled the invitation for {$subject}.",
