@@ -7,7 +7,7 @@ import {
     Plus,
     Trash2,
 } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
     destroy,
     reorder,
@@ -39,7 +39,16 @@ const editingColumn = ref<BoardColumn | undefined>();
 const taskDialogOpen = ref(false);
 const taskDialogMode = ref<'create' | 'edit'>('create');
 const taskColumnId = ref(0);
-const editingTask = ref<BoardTask | undefined>();
+const editingTaskId = ref<number | undefined>();
+
+// Derived from the live `columns` prop (rather than a captured snapshot) so
+// the dialog reflects fresh data — e.g. a newly added comment — after any
+// Inertia reload while it's open.
+const editingTask = computed<BoardTask | undefined>(() =>
+    props.columns
+        .find((column) => column.id === taskColumnId.value)
+        ?.tasks?.find((task) => task.id === editingTaskId.value),
+);
 
 function openCreateColumn() {
     columnDialogMode.value = 'create';
@@ -56,14 +65,14 @@ function openEditColumn(column: BoardColumn) {
 function openCreateTask(column: BoardColumn) {
     taskDialogMode.value = 'create';
     taskColumnId.value = column.id;
-    editingTask.value = undefined;
+    editingTaskId.value = undefined;
     taskDialogOpen.value = true;
 }
 
 function openEditTask(column: BoardColumn, task: BoardTask) {
     taskDialogMode.value = 'edit';
     taskColumnId.value = column.id;
-    editingTask.value = task;
+    editingTaskId.value = task.id;
     taskDialogOpen.value = true;
 }
 

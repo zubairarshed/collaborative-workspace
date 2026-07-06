@@ -3,8 +3,10 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\BoardColumnController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +48,9 @@ Route::middleware(['auth', 'verified'])->scopeBindings()->group(function () {
     Route::delete('workspaces/{workspace}/boards/{board}/tasks/{task}', [TaskController::class, 'destroy'])
         ->name('workspaces.boards.tasks.destroy');
 
+    Route::post('workspaces/{workspace}/boards/{board}/tasks/{task}/comments', [CommentController::class, 'store'])
+        ->name('workspaces.boards.tasks.comments.store');
+
     Route::post('workspaces/{workspace}/invitations', [InvitationController::class, 'store'])
         ->name('workspaces.invitations.store');
     Route::get('invitations/{token}', [InvitationController::class, 'show'])
@@ -59,6 +64,13 @@ Route::middleware(['auth', 'verified'])->scopeBindings()->group(function () {
         ->name('memberships.update');
     Route::delete('memberships/{membership}', [MembershipController::class, 'destroy'])
         ->name('memberships.destroy');
+
+    Route::get('notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+    Route::patch('notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.read-all');
+    Route::patch('notifications/{notification}', [NotificationController::class, 'markRead'])
+        ->name('notifications.markRead');
 });
 
 require __DIR__.'/settings.php';

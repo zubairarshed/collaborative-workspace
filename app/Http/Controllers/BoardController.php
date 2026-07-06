@@ -47,7 +47,7 @@ class BoardController extends Controller
             'creator',
             'columns.tasks' => fn ($query) => $query
                 ->where('is_archived', false)
-                ->with(['assignee', 'creator'])
+                ->with(['assignee', 'creator', 'comments.author'])
                 ->orderBy('position'),
         ]);
 
@@ -102,6 +102,15 @@ class BoardController extends Controller
                         'id' => $task->creator->id,
                         'name' => $task->creator->name,
                     ] : null,
+                    'comments' => $task->comments->map(fn ($comment) => [
+                        'id' => $comment->id,
+                        'body' => $comment->body,
+                        'created_at' => $comment->created_at,
+                        'author' => $comment->author ? [
+                            'id' => $comment->author->id,
+                            'name' => $comment->author->name,
+                        ] : null,
+                    ]),
                     'can' => [
                         'update' => $user->can('update', $task),
                         'move' => $user->can('move', $task),

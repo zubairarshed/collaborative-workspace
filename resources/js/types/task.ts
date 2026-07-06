@@ -12,6 +12,13 @@ export type TaskAbilities = {
     delete: boolean;
 };
 
+export type TaskComment = {
+    id: number;
+    body: string;
+    created_at: string;
+    author: TaskPerson | null;
+};
+
 export type BoardTask = {
     id: number;
     title: string;
@@ -21,6 +28,7 @@ export type BoardTask = {
     position: number;
     assignee: TaskPerson | null;
     creator: TaskPerson | null;
+    comments: TaskComment[];
     can: TaskAbilities;
 };
 

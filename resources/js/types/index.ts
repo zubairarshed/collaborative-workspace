@@ -2,6 +2,7 @@ export * from './activity';
 export * from './auth';
 export * from './board';
 export * from './navigation';
+export * from './notification';
 export * from './task';
 export * from './ui';
 export * from './workspace';
