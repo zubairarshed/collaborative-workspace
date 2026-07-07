@@ -34,6 +34,13 @@ class MoveTask
             $sourceColumn = $task->column;
             $movingWithinSameColumn = $sourceColumn->is($targetColumn);
 
+            // Park the task being moved at a safe, uniquely-offset position
+            // first. It still physically occupies a row in its current
+            // column until the final reassignment below, so — just like
+            // DeleteTask — anything that compacts the *other* tasks in that
+            // column must not be blocked by the mover's own old slot.
+            $task->update(['position' => self::TEMP_OFFSET + $task->id]);
+
             $orderedIds = $targetColumn->tasks()
                 ->when($movingWithinSameColumn, fn ($query) => $query->whereKeyNot($task->id))
                 ->orderBy('position')
@@ -46,19 +53,24 @@ class MoveTask
             array_splice($orderedIds, $position, 0, [$task->id]);
 
             if (! $movingWithinSameColumn) {
-                $sourceColumn->tasks()
+                $remaining = $sourceColumn->tasks()
                     ->whereKeyNot($task->id)
                     ->orderBy('position')
-                    ->get()
-                    ->each(function (Task $remaining, int $index): void {
-                        $remaining->update(['position' => $index]);
-                    });
+                    ->get();
+
+                foreach ($remaining as $remainingTask) {
+                    $remainingTask->update(['position' => self::TEMP_OFFSET + $remainingTask->id]);
+                }
+
+                foreach ($remaining as $index => $remainingTask) {
+                    $remainingTask->update(['position' => $index]);
+                }
             }
 
             $tasks = Task::query()->whereIn('id', $orderedIds)->get()->keyBy('id');
 
             foreach ($orderedIds as $id) {
-                $tasks[$id]->update(['position' => $tasks[$id]->position + self::TEMP_OFFSET]);
+                $tasks[$id]->update(['position' => self::TEMP_OFFSET + $tasks[$id]->id]);
             }
 
             foreach ($orderedIds as $index => $id) {

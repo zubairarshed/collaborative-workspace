@@ -1,24 +1,14 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import {
-    ArrowDown,
-    ArrowLeft,
-    ArrowRight,
-    ArrowUp,
-    Pencil,
-    Trash2,
-} from '@lucide/vue';
-import { destroy, move } from '@/actions/App/Http/Controllers/TaskController';
+import { Pencil, Trash2 } from '@lucide/vue';
+import { destroy } from '@/actions/App/Http/Controllers/TaskController';
 import PriorityBadge from '@/components/boards/PriorityBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { BoardColumn, BoardTask } from '@/types';
+import type { BoardTask } from '@/types';
 
 const props = defineProps<{
     task: BoardTask;
-    column: BoardColumn;
-    columns: BoardColumn[];
-    columnIndex: number;
     workspaceId: number;
     boardId: number;
 }>();
@@ -52,50 +42,10 @@ function deleteTask() {
         { preserveScroll: true },
     );
 }
-
-function moveTask(position: number, boardColumnId: number) {
-    router.patch(
-        move.url({
-            workspace: props.workspaceId,
-            board: props.boardId,
-            task: props.task.id,
-        }),
-        {
-            board_column_id: boardColumnId,
-            position,
-        },
-        { preserveScroll: true },
-    );
-}
-
-function moveWithinColumn(direction: 'up' | 'down') {
-    const tasks = props.column.tasks ?? [];
-    const index = tasks.findIndex((item) => item.id === props.task.id);
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-
-    if (targetIndex < 0 || targetIndex >= tasks.length) {
-        return;
-    }
-
-    moveTask(targetIndex, props.column.id);
-}
-
-function moveToAdjacentColumn(direction: 'left' | 'right') {
-    const targetIndex =
-        direction === 'left' ? props.columnIndex - 1 : props.columnIndex + 1;
-    const targetColumn = props.columns[targetIndex];
-
-    if (!targetColumn) {
-        return;
-    }
-
-    const targetPosition = targetColumn.tasks?.length ?? 0;
-    moveTask(targetPosition, targetColumn.id);
-}
 </script>
 
 <template>
-    <Card class="gap-3 py-3 shadow-sm">
+    <Card class="cursor-grab gap-3 py-3 shadow-sm active:cursor-grabbing">
         <CardHeader class="gap-2 px-3">
             <div class="flex items-start justify-between gap-2">
                 <CardTitle class="text-sm leading-snug font-medium">
@@ -123,7 +73,7 @@ function moveToAdjacentColumn(direction: 'left' | 'right') {
             </div>
 
             <div
-                v-if="task.can.update || task.can.move || task.can.delete"
+                v-if="task.can.update || task.can.delete"
                 class="flex flex-wrap items-center gap-0.5"
             >
                 <Button
@@ -135,53 +85,6 @@ function moveToAdjacentColumn(direction: 'left' | 'right') {
                     <Pencil class="size-3.5" />
                     <span class="sr-only">Edit task</span>
                 </Button>
-                <template v-if="task.can.move">
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        :disabled="columnIndex === 0"
-                        @click="moveToAdjacentColumn('left')"
-                    >
-                        <ArrowLeft class="size-3.5" />
-                        <span class="sr-only">Move to previous column</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        :disabled="columnIndex === columns.length - 1"
-                        @click="moveToAdjacentColumn('right')"
-                    >
-                        <ArrowRight class="size-3.5" />
-                        <span class="sr-only">Move to next column</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        :disabled="
-                            (column.tasks?.findIndex(
-                                (item) => item.id === task.id,
-                            ) ?? 0) === 0
-                        "
-                        @click="moveWithinColumn('up')"
-                    >
-                        <ArrowUp class="size-3.5" />
-                        <span class="sr-only">Move up</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        :disabled="
-                            (column.tasks?.findIndex(
-                                (item) => item.id === task.id,
-                            ) ?? 0) ===
-                            (column.tasks?.length ?? 1) - 1
-                        "
-                        @click="moveWithinColumn('down')"
-                    >
-                        <ArrowDown class="size-3.5" />
-                        <span class="sr-only">Move down</span>
-                    </Button>
-                </template>
                 <Button
                     v-if="task.can.delete"
                     variant="ghost"

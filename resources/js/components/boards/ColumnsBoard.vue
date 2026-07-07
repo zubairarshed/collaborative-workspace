@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import {
-    ChevronDown,
-    ChevronUp,
-    Pencil,
-    Plus,
-    Trash2,
-} from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { GripVertical, Pencil, Plus, Trash2 } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import draggable from 'vuedraggable';
 import {
     destroy,
     reorder,
 } from '@/actions/App/Http/Controllers/BoardColumnController';
+import { move } from '@/actions/App/Http/Controllers/TaskController';
 import ColumnFormDialog from '@/components/boards/ColumnFormDialog.vue';
 import TaskCard from '@/components/boards/TaskCard.vue';
 import TaskFormDialog from '@/components/boards/TaskFormDialog.vue';
@@ -31,6 +27,22 @@ const props = defineProps<{
     members: WorkspaceMemberOption[];
     can: Pick<BoardAbilities, 'createColumn' | 'reorderColumns'>;
 }>();
+
+// A local, mutable copy of `columns` for vuedraggable's v-model. Re-synced
+// whenever the prop changes (e.g. after any Inertia reload) so drag state
+// never goes stale.
+const localColumns = ref<BoardColumn[]>([]);
+
+watch(
+    () => props.columns,
+    (columns) => {
+        localColumns.value = columns.map((column) => ({
+            ...column,
+            tasks: [...(column.tasks ?? [])],
+        }));
+    },
+    { immediate: true },
+);
 
 const columnDialogOpen = ref(false);
 const columnDialogMode = ref<'create' | 'edit'>('create');
@@ -91,20 +103,37 @@ function deleteColumn(column: BoardColumn) {
     );
 }
 
-function moveColumn(column: BoardColumn, direction: 'up' | 'down') {
-    const ids = props.columns.map((item) => item.id);
-    const index = ids.indexOf(column.id);
-    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+function onColumnsReordered() {
+    router.patch(
+        reorder.url({ workspace: props.workspaceId, board: props.boardId }),
+        { columns: localColumns.value.map((column) => column.id) },
+        { preserveScroll: true },
+    );
+}
 
-    if (swapIndex < 0 || swapIndex >= ids.length) {
+type DraggableChange = {
+    added?: { element: BoardTask; newIndex: number };
+    moved?: { element: BoardTask; oldIndex: number; newIndex: number };
+    removed?: { element: BoardTask; oldIndex: number };
+};
+
+function onTaskListChanged(column: BoardColumn, event: DraggableChange) {
+    const change = event.added ?? event.moved;
+
+    if (!change) {
         return;
     }
 
-    [ids[index], ids[swapIndex]] = [ids[swapIndex], ids[index]];
-
     router.patch(
-        reorder.url({ workspace: props.workspaceId, board: props.boardId }),
-        { columns: ids },
+        move.url({
+            workspace: props.workspaceId,
+            board: props.boardId,
+            task: change.element.id,
+        }),
+        {
+            board_column_id: column.id,
+            position: change.newIndex,
+        },
         { preserveScroll: true },
     );
 }
@@ -125,104 +154,103 @@ function moveColumn(column: BoardColumn, direction: 'up' | 'down') {
             </Button>
         </div>
 
-        <div class="flex gap-4 overflow-x-auto pb-2">
-            <div
-                v-for="(column, index) in columns"
-                :key="column.id"
-                class="flex w-72 shrink-0 flex-col rounded-xl border bg-muted/30"
-            >
-                <div class="flex items-start justify-between gap-2 border-b p-3">
-                    <div class="min-w-0 space-y-1">
-                        <h3 class="truncate font-medium">{{ column.name }}</h3>
-                        <div class="flex flex-wrap gap-1.5">
-                            <Badge
-                                v-if="column.key"
-                                variant="outline"
-                                class="text-xs"
+        <draggable
+            v-model="localColumns"
+            item-key="id"
+            tag="div"
+            class="flex gap-4 overflow-x-auto pb-2"
+            handle=".column-drag-handle"
+            :disabled="!can.reorderColumns"
+            @end="onColumnsReordered"
+        >
+            <template #item="{ element: column }">
+                <div class="flex w-72 shrink-0 flex-col rounded-xl border bg-muted/30">
+                    <div class="flex items-start justify-between gap-2 border-b p-3">
+                        <div class="flex min-w-0 items-start gap-1.5">
+                            <GripVertical
+                                v-if="can.reorderColumns"
+                                class="column-drag-handle mt-0.5 size-4 shrink-0 cursor-grab text-muted-foreground"
+                            />
+                            <div class="min-w-0 space-y-1">
+                                <h3 class="truncate font-medium">{{ column.name }}</h3>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <Badge
+                                        v-if="column.key"
+                                        variant="outline"
+                                        class="text-xs"
+                                    >
+                                        {{ column.key }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="column.wip_limit"
+                                        variant="secondary"
+                                        class="text-xs"
+                                    >
+                                        WIP {{ column.wip_limit }}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="can.createColumn"
+                            class="flex shrink-0 items-center gap-0.5"
+                        >
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                @click="openEditColumn(column)"
                             >
-                                {{ column.key }}
-                            </Badge>
-                            <Badge
-                                v-if="column.wip_limit"
-                                variant="secondary"
-                                class="text-xs"
+                                <Pencil class="size-4" />
+                                <span class="sr-only">Edit column</span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                @click="deleteColumn(column)"
                             >
-                                WIP {{ column.wip_limit }}
-                            </Badge>
+                                <Trash2 class="size-4 text-destructive" />
+                                <span class="sr-only">Delete column</span>
+                            </Button>
                         </div>
                     </div>
 
-                    <div
-                        v-if="can.createColumn || can.reorderColumns"
-                        class="flex shrink-0 items-center gap-0.5"
+                    <draggable
+                        v-model="column.tasks"
+                        item-key="id"
+                        tag="div"
+                        class="flex flex-1 flex-col gap-2 p-3"
+                        group="tasks"
+                        filter="button"
+                        :prevent-on-filter="false"
+                        :disabled="!column.can?.createTask"
+                        @change="onTaskListChanged(column, $event)"
                     >
-                        <template v-if="can.reorderColumns">
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                :disabled="index === 0"
-                                @click="moveColumn(column, 'up')"
-                            >
-                                <ChevronUp class="size-4" />
-                                <span class="sr-only">Move left</span>
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                :disabled="index === columns.length - 1"
-                                @click="moveColumn(column, 'down')"
-                            >
-                                <ChevronDown class="size-4" />
-                                <span class="sr-only">Move right</span>
-                            </Button>
+                        <template #item="{ element: task }">
+                            <TaskCard
+                                :task="task"
+                                :workspace-id="workspaceId"
+                                :board-id="boardId"
+                                @edit="openEditTask(column, $event)"
+                            />
                         </template>
+                    </draggable>
+
+                    <div class="px-3 pb-3">
                         <Button
-                            v-if="can.createColumn"
+                            v-if="column.can?.createTask"
                             variant="ghost"
-                            size="icon-sm"
-                            @click="openEditColumn(column)"
+                            size="sm"
+                            class="w-full justify-start text-muted-foreground"
+                            @click="openCreateTask(column)"
                         >
-                            <Pencil class="size-4" />
-                            <span class="sr-only">Edit column</span>
-                        </Button>
-                        <Button
-                            v-if="can.createColumn"
-                            variant="ghost"
-                            size="icon-sm"
-                            @click="deleteColumn(column)"
-                        >
-                            <Trash2 class="size-4 text-destructive" />
-                            <span class="sr-only">Delete column</span>
+                            <Plus class="size-4" />
+                            Add task
                         </Button>
                     </div>
                 </div>
-
-                <div class="flex flex-1 flex-col gap-2 p-3">
-                    <TaskCard
-                        v-for="task in column.tasks ?? []"
-                        :key="task.id"
-                        :task="task"
-                        :column="column"
-                        :columns="columns"
-                        :column-index="index"
-                        :workspace-id="workspaceId"
-                        :board-id="boardId"
-                        @edit="openEditTask(column, $event)"
-                    />
-
-                    <Button
-                        v-if="column.can?.createTask"
-                        variant="ghost"
-                        size="sm"
-                        class="w-full justify-start text-muted-foreground"
-                        @click="openCreateTask(column)"
-                    >
-                        <Plus class="size-4" />
-                        Add task
-                    </Button>
-                </div>
-            </div>
-        </div>
+            </template>
+        </draggable>
 
         <ColumnFormDialog
             v-model:open="columnDialogOpen"
