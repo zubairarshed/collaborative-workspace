@@ -28,6 +28,7 @@ class MoveTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'version' => ['required', 'integer', 'min:1'],
             'board_column_id' => [
                 'required',
                 'integer',

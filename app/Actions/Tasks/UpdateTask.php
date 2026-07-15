@@ -7,6 +7,7 @@ use App\Events\Tasks\TaskAssigned;
 use App\Events\Tasks\TaskUpdated;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class UpdateTask
 {
@@ -25,7 +26,7 @@ class UpdateTask
      *     assignee_id?: int|null
      * }  $data
      */
-    public function handle(Task $task, User $actor, array $data): Task
+    public function handle(Task $task, User $actor, array $data, int $expectedVersion): Task
     {
         $priority = null;
         if (array_key_exists('priority', $data)) {
@@ -35,21 +36,39 @@ class UpdateTask
             }
         }
 
-        $task->fill(array_filter(
-            [
-                'title' => $data['title'] ?? null,
-                'description' => $data['description'] ?? null,
-                'priority' => $priority,
-                'due_at' => array_key_exists('due_at', $data) ? $data['due_at'] : null,
-                'assignee_id' => array_key_exists('assignee_id', $data) ? $data['assignee_id'] : null,
-            ],
-            fn ($value, $key) => array_key_exists($key, $data),
-            ARRAY_FILTER_USE_BOTH,
-        ));
+        /** @var list<string> $changedFields */
+        $changedFields = [];
 
-        $changedFields = array_keys($task->getDirty());
+        $task = DB::transaction(function () use ($task, $data, $priority, $expectedVersion, &$changedFields): Task {
+            // OCC (ADR-004): re-read the row under a pessimistic lock so the
+            // version compare stays atomic with the write.
+            $task = Task::query()->lockForUpdate()->findOrFail($task->id);
+            $task->assertVersion($expectedVersion);
+
+            $task->fill(array_filter(
+                [
+                    'title' => $data['title'] ?? null,
+                    'description' => $data['description'] ?? null,
+                    'priority' => $priority,
+                    'due_at' => array_key_exists('due_at', $data) ? $data['due_at'] : null,
+                    'assignee_id' => array_key_exists('assignee_id', $data) ? $data['assignee_id'] : null,
+                ],
+                fn ($value, $key) => array_key_exists($key, $data),
+                ARRAY_FILTER_USE_BOTH,
+            ));
+
+            $changedFields = array_keys($task->getDirty());
+
+            if ($changedFields !== []) {
+                $task->bumpVersion();
+            }
+
+            $task->save();
+
+            return $task;
+        });
+
         $assigneeChanged = in_array('assignee_id', $changedFields, true);
-        $task->save();
 
         if ($assigneeChanged) {
             event(new TaskAssigned($task, $actor, $task->assignee));

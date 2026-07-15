@@ -23,6 +23,7 @@ import type {
 const props = defineProps<{
     workspaceId: number;
     boardId: number;
+    boardVersion: number;
     columns: BoardColumn[];
     members: WorkspaceMemberOption[];
     can: Pick<BoardAbilities, 'createColumn' | 'reorderColumns'>;
@@ -106,7 +107,12 @@ function deleteColumn(column: BoardColumn) {
 function onColumnsReordered() {
     router.patch(
         reorder.url({ workspace: props.workspaceId, board: props.boardId }),
-        { columns: localColumns.value.map((column) => column.id) },
+        {
+            columns: localColumns.value.map((column) => column.id),
+            // Column ordering is board-level state under ADR-004, so a
+            // reorder is guarded by the board's version.
+            version: props.boardVersion,
+        },
         { preserveScroll: true },
     );
 }
@@ -133,6 +139,7 @@ function onTaskListChanged(column: BoardColumn, event: DraggableChange) {
         {
             board_column_id: column.id,
             position: change.newIndex,
+            version: change.element.version,
         },
         { preserveScroll: true },
     );
@@ -164,15 +171,21 @@ function onTaskListChanged(column: BoardColumn, event: DraggableChange) {
             @end="onColumnsReordered"
         >
             <template #item="{ element: column }">
-                <div class="flex w-72 shrink-0 flex-col rounded-xl border bg-muted/30">
-                    <div class="flex items-start justify-between gap-2 border-b p-3">
+                <div
+                    class="flex w-72 shrink-0 flex-col rounded-xl border bg-muted/30"
+                >
+                    <div
+                        class="flex items-start justify-between gap-2 border-b p-3"
+                    >
                         <div class="flex min-w-0 items-start gap-1.5">
                             <GripVertical
                                 v-if="can.reorderColumns"
                                 class="column-drag-handle mt-0.5 size-4 shrink-0 cursor-grab text-muted-foreground"
                             />
                             <div class="min-w-0 space-y-1">
-                                <h3 class="truncate font-medium">{{ column.name }}</h3>
+                                <h3 class="truncate font-medium">
+                                    {{ column.name }}
+                                </h3>
                                 <div class="flex flex-wrap gap-1.5">
                                     <Badge
                                         v-if="column.key"

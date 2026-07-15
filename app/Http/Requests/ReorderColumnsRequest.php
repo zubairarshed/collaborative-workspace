@@ -26,6 +26,9 @@ class ReorderColumnsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // The board's version — column ordering is board-level state
+            // under ADR-004, so a reorder is guarded by the board version.
+            'version' => ['required', 'integer', 'min:1'],
             'columns' => ['required', 'array', 'min:1'],
             'columns.*' => [
                 'integer',

@@ -56,6 +56,7 @@ test('moving a task to another column logs a TaskMoved activity with column name
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $task]), [
             'board_column_id' => $otherColumn->id,
+            'version' => $task->version,
         ])
         ->assertRedirect();
 
@@ -79,6 +80,7 @@ test('reordering a task within the same column does not log a move activity', fu
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $first]), [
             'board_column_id' => $column->id,
             'position' => 1,
+            'version' => $first->version,
         ])
         ->assertRedirect();
 
@@ -98,6 +100,7 @@ test('assigning a task logs a TaskAssigned activity separate from field updates'
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
             'title' => 'Renamed task',
             'assignee_id' => $assignee->id,
+            'version' => $task->version,
         ])
         ->assertRedirect();
 

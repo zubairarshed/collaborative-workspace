@@ -2,7 +2,6 @@
 
 use App\Enums\MembershipRole;
 use App\Models\Invitation;
-use App\Models\Membership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;

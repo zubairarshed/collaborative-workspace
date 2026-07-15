@@ -50,6 +50,7 @@ class TaskFactory extends Factory
                     ->where('board_column_id', $attributes['board_column_id'])
                     ->max('position') ?? -1) + 1;
             },
+            'version' => 1,
         ];
     }
 

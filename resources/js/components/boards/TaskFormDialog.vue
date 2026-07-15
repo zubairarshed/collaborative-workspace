@@ -2,10 +2,7 @@
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import { store as storeComment } from '@/actions/App/Http/Controllers/CommentController';
-import {
-    store,
-    update,
-} from '@/actions/App/Http/Controllers/TaskController';
+import { store, update } from '@/actions/App/Http/Controllers/TaskController';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -116,40 +113,16 @@ function submit() {
         description: form.description || null,
         priority: form.priority,
         due_at: form.due_at || null,
-        assignee_id: form.assignee_id === 'none' ? null : Number(form.assignee_id),
+        assignee_id:
+            form.assignee_id === 'none' ? null : Number(form.assignee_id),
     };
 
     if (props.mode === 'create') {
-        form
-            .transform(() => payload)
-            .post(
-                store.url({
-                    workspace: props.workspaceId,
-                    board: props.boardId,
-                    column: props.columnId,
-                }),
-                {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        open.value = false;
-                    },
-                },
-            );
-
-        return;
-    }
-
-    if (!props.task) {
-        return;
-    }
-
-    form
-        .transform(() => payload)
-        .patch(
-            update.url({
+        form.transform(() => payload).post(
+            store.url({
                 workspace: props.workspaceId,
                 board: props.boardId,
-                task: props.task.id,
+                column: props.columnId,
             }),
             {
                 preserveScroll: true,
@@ -158,6 +131,29 @@ function submit() {
                 },
             },
         );
+
+        return;
+    }
+
+    if (!props.task) {
+        return;
+    }
+
+    const version = props.task.version;
+
+    form.transform(() => ({ ...payload, version })).patch(
+        update.url({
+            workspace: props.workspaceId,
+            board: props.boardId,
+            task: props.task.id,
+        }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                open.value = false;
+            },
+        },
+    );
 }
 </script>
 
@@ -263,11 +259,18 @@ function submit() {
                 </DialogFooter>
             </form>
 
-            <div v-if="mode === 'edit' && task" class="flex flex-col gap-3 border-t pt-4">
+            <div
+                v-if="mode === 'edit' && task"
+                class="flex flex-col gap-3 border-t pt-4"
+            >
                 <h3 class="text-sm font-medium">Comments</h3>
 
                 <ul v-if="task.comments.length > 0" class="flex flex-col gap-3">
-                    <li v-for="comment in task.comments" :key="comment.id" class="text-sm">
+                    <li
+                        v-for="comment in task.comments"
+                        :key="comment.id"
+                        class="text-sm"
+                    >
                         <div class="flex items-baseline gap-2">
                             <span class="font-medium">
                                 {{ comment.author?.name ?? 'Former member' }}
@@ -279,9 +282,14 @@ function submit() {
                         <p class="text-muted-foreground">{{ comment.body }}</p>
                     </li>
                 </ul>
-                <p v-else class="text-sm text-muted-foreground">No comments yet.</p>
+                <p v-else class="text-sm text-muted-foreground">
+                    No comments yet.
+                </p>
 
-                <form class="flex flex-col gap-2" @submit.prevent="submitComment">
+                <form
+                    class="flex flex-col gap-2"
+                    @submit.prevent="submitComment"
+                >
                     <Input
                         v-model="commentForm.body"
                         placeholder="Write a comment"

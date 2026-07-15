@@ -72,6 +72,7 @@ class BoardController extends Controller
                 'description' => $board->description,
                 'is_archived' => $board->is_archived,
                 'position' => $board->position,
+                'version' => $board->version,
                 'created_at' => $board->created_at,
                 'creator' => $board->creator ? [
                     'id' => $board->creator->id,
@@ -84,6 +85,7 @@ class BoardController extends Controller
                 'key' => $column->key,
                 'position' => $column->position,
                 'wip_limit' => $column->wip_limit,
+                'version' => $column->version,
                 'can' => [
                     'createTask' => $user->can('create', [Task::class, $column]),
                 ],
@@ -94,6 +96,7 @@ class BoardController extends Controller
                     'priority' => $task->priority->value,
                     'due_at' => $task->due_at,
                     'position' => $task->position,
+                    'version' => $task->version,
                     'assignee' => $task->assignee ? [
                         'id' => $task->assignee->id,
                         'name' => $task->assignee->name,
@@ -138,7 +141,7 @@ class BoardController extends Controller
     {
         Gate::authorize('update', $board);
 
-        $action->handle($board, $request->user(), $request->validated());
+        $action->handle($board, $request->user(), $request->safe()->except('version'), $request->integer('version'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Board updated.')]);
 

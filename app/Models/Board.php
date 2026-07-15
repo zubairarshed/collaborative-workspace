@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVersion;
 use Database\Factories\BoardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Board extends Model
 {
     /** @use HasFactory<BoardFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasVersion, SoftDeletes;
 
     /**
      * The default workflow columns created for every new board, in order.
@@ -36,6 +37,7 @@ class Board extends Model
         return [
             'is_archived' => 'boolean',
             'position' => 'integer',
+            'version' => 'integer',
         ];
     }
 

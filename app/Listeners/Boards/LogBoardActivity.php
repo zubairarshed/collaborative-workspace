@@ -10,8 +10,8 @@ use App\Events\Boards\BoardDeleted;
 use App\Events\Boards\BoardUpdated;
 use App\Events\Boards\ColumnCreated;
 use App\Events\Boards\ColumnDeleted;
-use App\Events\Boards\ColumnUpdated;
 use App\Events\Boards\ColumnsReordered;
+use App\Events\Boards\ColumnUpdated;
 
 class LogBoardActivity
 {

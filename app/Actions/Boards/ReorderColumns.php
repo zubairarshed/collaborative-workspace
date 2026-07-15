@@ -21,11 +21,21 @@ class ReorderColumns
      * IDs that do not belong to the board are ignored; columns omitted from
      * the list keep their relative order after the provided ones.
      *
+     * Column ordering is guarded by the BOARD's version (ADR-004): a reorder
+     * mutates the board's column layout as a whole, so the client submits the
+     * board version it rendered from, and each successful reorder bumps it.
+     * A column's own version guards edits to that column (name, WIP limit).
+     *
      * @param  list<int>  $orderedIds
      */
-    public function handle(Board $board, User $actor, array $orderedIds): void
+    public function handle(Board $board, User $actor, array $orderedIds, int $expectedVersion): void
     {
-        DB::transaction(function () use ($board, $orderedIds): void {
+        DB::transaction(function () use ($board, $orderedIds, $expectedVersion): void {
+            // OCC (ADR-004): re-read the board under a pessimistic lock so
+            // the version compare stays atomic with the position writes.
+            $lockedBoard = Board::query()->lockForUpdate()->findOrFail($board->id);
+            $lockedBoard->assertVersion($expectedVersion);
+
             $columns = $board->columns()->get()->keyBy('id');
 
             $ordered = collect($orderedIds)
@@ -45,6 +55,11 @@ class ReorderColumns
             foreach ($finalOrder as $index => $id) {
                 $columns[$id]->update(['position' => $index]);
             }
+
+            $lockedBoard->bumpVersion();
+            $lockedBoard->save();
+
+            $board->setAttribute('version', $lockedBoard->currentVersion());
         });
 
         event(new ColumnsReordered($board, $actor));

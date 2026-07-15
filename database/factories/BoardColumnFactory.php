@@ -22,6 +22,7 @@ class BoardColumnFactory extends Factory
             'key' => null,
             'position' => 0,
             'wip_limit' => null,
+            'version' => 1,
         ];
     }
 

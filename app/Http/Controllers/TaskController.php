@@ -52,7 +52,7 @@ class TaskController extends Controller
     ): RedirectResponse {
         Gate::authorize('update', $task);
 
-        $action->handle($task, $request->user(), $request->validated());
+        $action->handle($task, $request->user(), $request->safe()->except('version'), $request->integer('version'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Task updated.')]);
 
@@ -71,7 +71,7 @@ class TaskController extends Controller
     ): RedirectResponse {
         Gate::authorize('move', $task);
 
-        $action->handle($task, $request->user(), $request->targetColumn(), $request->targetPosition());
+        $action->handle($task, $request->user(), $request->targetColumn(), $request->integer('version'), $request->targetPosition());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Task moved.')]);
 

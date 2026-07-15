@@ -39,6 +39,7 @@ test('owners admins and members can create update reorder and delete columns', f
         ->patch(route('workspaces.boards.columns.update', [$workspace, $board, $newColumn]), [
             'name' => 'Blocked QA',
             'wip_limit' => 3,
+            'version' => $newColumn->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -52,6 +53,7 @@ test('owners admins and members can create update reorder and delete columns', f
     $this->actingAs($actor)
         ->patch(route('workspaces.boards.columns.reorder', [$workspace, $board]), [
             'columns' => $orderedIds,
+            'version' => $board->fresh()->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -87,6 +89,7 @@ test('viewers cannot create update reorder or delete columns', function () {
     $this->actingAs($viewer)
         ->patch(route('workspaces.boards.columns.update', [$workspace, $board, $existingColumn]), [
             'name' => 'Viewer Update',
+            'version' => $existingColumn->version,
         ])
         ->assertForbidden();
 
@@ -95,6 +98,7 @@ test('viewers cannot create update reorder or delete columns', function () {
     $this->actingAs($viewer)
         ->patch(route('workspaces.boards.columns.reorder', [$workspace, $board]), [
             'columns' => array_reverse($orderedIds),
+            'version' => $board->version,
         ])
         ->assertForbidden();
 
