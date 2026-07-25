@@ -18,7 +18,8 @@ defineOptions({
     },
 });
 
-const hasUnread = () => props.notifications.data.some((item) => item.read_at === null);
+const hasUnread = () =>
+    props.notifications.data.some((item) => item.read_at === null);
 
 function markOneRead(id: number) {
     router.patch(markRead.url(id), {}, { preserveScroll: true });
@@ -45,7 +46,12 @@ function formatDateTime(value: string): string {
     <div class="flex h-full flex-1 flex-col gap-6 p-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-xl font-semibold tracking-tight">Notifications</h1>
-            <Button v-if="hasUnread()" variant="outline" size="sm" @click="markAll">
+            <Button
+                v-if="hasUnread()"
+                variant="outline"
+                size="sm"
+                @click="markAll"
+            >
                 Mark all read
             </Button>
         </div>
@@ -85,17 +91,34 @@ function formatDateTime(value: string): string {
             v-if="notifications.prev_page_url || notifications.next_page_url"
             class="flex items-center justify-between"
         >
-            <Button v-if="notifications.prev_page_url" as-child variant="outline" size="sm">
-                <Link :href="notifications.prev_page_url" preserve-scroll>Previous</Link>
+            <Button
+                v-if="notifications.prev_page_url"
+                as-child
+                variant="outline"
+                size="sm"
+            >
+                <Link :href="notifications.prev_page_url" preserve-scroll
+                    >Previous</Link
+                >
             </Button>
-            <Button v-else variant="outline" size="sm" disabled>Previous</Button>
+            <Button v-else variant="outline" size="sm" disabled
+                >Previous</Button
+            >
 
             <span class="text-sm text-muted-foreground">
-                Page {{ notifications.current_page }} of {{ notifications.last_page }}
+                Page {{ notifications.current_page }} of
+                {{ notifications.last_page }}
             </span>
 
-            <Button v-if="notifications.next_page_url" as-child variant="outline" size="sm">
-                <Link :href="notifications.next_page_url" preserve-scroll>Next</Link>
+            <Button
+                v-if="notifications.next_page_url"
+                as-child
+                variant="outline"
+                size="sm"
+            >
+                <Link :href="notifications.next_page_url" preserve-scroll
+                    >Next</Link
+                >
             </Button>
             <Button v-else variant="outline" size="sm" disabled>Next</Button>
         </div>

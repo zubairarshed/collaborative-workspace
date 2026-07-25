@@ -51,6 +51,7 @@ test('owners admins and members can create update move archive and delete tasks'
             'description' => 'Updated copy',
             'priority' => TaskPriority::Urgent->value,
             'assignee_id' => null,
+            'version' => $task->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -70,6 +71,7 @@ test('owners admins and members can create update move archive and delete tasks'
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $secondTask]), [
             'board_column_id' => $column->id,
             'position' => 0,
+            'version' => $secondTask->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -79,6 +81,7 @@ test('owners admins and members can create update move archive and delete tasks'
     $this->actingAs($actor)
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $task]), [
             'board_column_id' => $otherColumn->id,
+            'version' => $task->fresh()->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -131,6 +134,7 @@ test('viewers cannot create update move archive or delete tasks', function () {
     $this->actingAs($viewer)
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
             'title' => 'Viewer update',
+            'version' => $task->version,
         ])
         ->assertForbidden();
 
@@ -138,6 +142,7 @@ test('viewers cannot create update move archive or delete tasks', function () {
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $task]), [
             'board_column_id' => $column->id,
             'position' => 0,
+            'version' => $task->version,
         ])
         ->assertForbidden();
 
@@ -170,6 +175,7 @@ test('assignee must be a workspace member', function () {
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
             'assignee_id' => $stranger->id,
+            'version' => $task->version,
         ])
         ->assertSessionHasErrors('assignee_id');
 });
@@ -200,6 +206,7 @@ test('cannot move a task to a column on another board', function () {
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.move', [$workspace, $board, $task]), [
             'board_column_id' => $foreignColumn->id,
+            'version' => $task->version,
         ])
         ->assertSessionHasErrors('board_column_id');
 });
@@ -215,6 +222,7 @@ test('cannot update a task through the wrong board route', function () {
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $otherBoard, $task]), [
             'title' => 'Cross-board update',
+            'version' => $task->version,
         ])
         ->assertNotFound();
 });

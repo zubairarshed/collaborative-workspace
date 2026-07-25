@@ -29,6 +29,7 @@ class BoardFactory extends Factory
             'description' => fake()->optional()->sentence(),
             'is_archived' => false,
             'position' => 0,
+            'version' => 1,
         ];
     }
 

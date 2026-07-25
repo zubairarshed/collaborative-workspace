@@ -1,3 +1,5 @@
+import type { BoardTask } from './task';
+
 export type BoardListItem = {
     id: number;
     name: string;
@@ -25,6 +27,7 @@ export type BoardDetail = {
     description: string | null;
     is_archived: boolean;
     position: number;
+    version: number;
     created_at: string;
     creator: BoardCreator | null;
 };
@@ -35,10 +38,11 @@ export type BoardColumn = {
     key: string | null;
     position: number;
     wip_limit: number | null;
+    version: number;
     can?: {
         createTask: boolean;
     };
-    tasks?: import('./task').BoardTask[];
+    tasks?: BoardTask[];
 };
 
 export type BoardAbilities = {

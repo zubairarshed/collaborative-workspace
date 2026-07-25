@@ -12,6 +12,7 @@ use App\Models\Invitation;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -168,6 +169,7 @@ class WorkspaceController extends Controller
     /**
      * Delete a workspace.
      */
+    // #[Authorize('delete', Workspace::class)]
     public function destroy(Request $request, Workspace $workspace, DeleteWorkspace $action): RedirectResponse
     {
         Gate::authorize('delete', $workspace);

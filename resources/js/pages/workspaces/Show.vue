@@ -7,6 +7,7 @@ import {
     destroy,
     update,
 } from '@/actions/App/Http/Controllers/WorkspaceController';
+import BoardsList from '@/components/boards/BoardsList.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,6 @@ import InviteMemberForm from '@/components/workspaces/InviteMemberForm.vue';
 import MembersTable from '@/components/workspaces/MembersTable.vue';
 import PendingInvitations from '@/components/workspaces/PendingInvitations.vue';
 import RoleBadge from '@/components/workspaces/RoleBadge.vue';
-import BoardsList from '@/components/boards/BoardsList.vue';
 import { dashboard } from '@/routes';
 import type {
     BoardListItem,

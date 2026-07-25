@@ -40,7 +40,7 @@ class BoardColumnController extends Controller
     {
         Gate::authorize('update', $column);
 
-        $action->handle($column, $request->user(), $request->validated());
+        $action->handle($column, $request->user(), $request->safe()->except('version'), $request->integer('version'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Column updated.')]);
 
@@ -54,7 +54,7 @@ class BoardColumnController extends Controller
     {
         Gate::authorize('reorder', [BoardColumn::class, $board]);
 
-        $action->handle($board, $request->user(), $request->orderedColumnIds());
+        $action->handle($board, $request->user(), $request->orderedColumnIds(), $request->integer('version'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Columns reordered.')]);
 

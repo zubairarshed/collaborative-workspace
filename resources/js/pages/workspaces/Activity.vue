@@ -71,17 +71,33 @@ function formatDateTime(value: string): string {
             v-if="activities.prev_page_url || activities.next_page_url"
             class="flex items-center justify-between"
         >
-            <Button v-if="activities.prev_page_url" as-child variant="outline" size="sm">
-                <Link :href="activities.prev_page_url" preserve-scroll>Previous</Link>
+            <Button
+                v-if="activities.prev_page_url"
+                as-child
+                variant="outline"
+                size="sm"
+            >
+                <Link :href="activities.prev_page_url" preserve-scroll
+                    >Previous</Link
+                >
             </Button>
-            <Button v-else variant="outline" size="sm" disabled>Previous</Button>
+            <Button v-else variant="outline" size="sm" disabled
+                >Previous</Button
+            >
 
             <span class="text-sm text-muted-foreground">
                 Page {{ activities.current_page }} of {{ activities.last_page }}
             </span>
 
-            <Button v-if="activities.next_page_url" as-child variant="outline" size="sm">
-                <Link :href="activities.next_page_url" preserve-scroll>Next</Link>
+            <Button
+                v-if="activities.next_page_url"
+                as-child
+                variant="outline"
+                size="sm"
+            >
+                <Link :href="activities.next_page_url" preserve-scroll
+                    >Next</Link
+                >
             </Button>
             <Button v-else variant="outline" size="sm" disabled>Next</Button>
         </div>

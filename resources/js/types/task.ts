@@ -26,6 +26,7 @@ export type BoardTask = {
     priority: TaskPriority;
     due_at: string | null;
     position: number;
+    version: number;
     assignee: TaskPerson | null;
     creator: TaskPerson | null;
     comments: TaskComment[];

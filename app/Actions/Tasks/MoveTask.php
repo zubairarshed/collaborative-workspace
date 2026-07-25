@@ -20,7 +20,7 @@ class MoveTask
     /**
      * Move a task to another column and/or position within the same board.
      */
-    public function handle(Task $task, User $actor, BoardColumn $targetColumn, ?int $position = null): Task
+    public function handle(Task $task, User $actor, BoardColumn $targetColumn, int $expectedVersion, ?int $position = null): Task
     {
         if ($targetColumn->board_id !== $task->board_id) {
             throw ValidationException::withMessages([
@@ -30,7 +30,15 @@ class MoveTask
 
         $sourceColumn = $task->column;
 
-        $moved = DB::transaction(function () use ($task, $targetColumn, $position): Task {
+        $moved = DB::transaction(function () use ($task, $targetColumn, $expectedVersion, $position): Task {
+            // OCC (ADR-004): the version compare must be atomic with the
+            // write, so re-read the row under a pessimistic lock for the
+            // duration of the check-write window.
+            Task::query()
+                ->lockForUpdate()
+                ->findOrFail($task->id)
+                ->assertVersion($expectedVersion);
+
             $sourceColumn = $task->column;
             $movingWithinSameColumn = $sourceColumn->is($targetColumn);
 
@@ -80,7 +88,11 @@ class MoveTask
                 ]);
             }
 
-            return $task->fresh();
+            $moved = $task->fresh();
+            $moved->bumpVersion();
+            $moved->save();
+
+            return $moved;
         });
 
         if (! $sourceColumn->is($targetColumn)) {

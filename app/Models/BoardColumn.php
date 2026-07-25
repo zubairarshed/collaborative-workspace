@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVersion;
 use Database\Factories\BoardColumnFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class BoardColumn extends Model
 {
     /** @use HasFactory<BoardColumnFactory> */
-    use HasFactory;
+    use HasFactory, HasVersion;
 
     /**
      * @return array<string, string>
@@ -23,6 +24,7 @@ class BoardColumn extends Model
         return [
             'position' => 'integer',
             'wip_limit' => 'integer',
+            'version' => 'integer',
         ];
     }
 

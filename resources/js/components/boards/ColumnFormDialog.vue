@@ -60,14 +60,15 @@ function submit() {
     };
 
     if (props.mode === 'create') {
-        form
-            .transform(() => payload)
-            .post(store.url({ workspace: props.workspaceId, board: props.boardId }), {
+        form.transform(() => payload).post(
+            store.url({ workspace: props.workspaceId, board: props.boardId }),
+            {
                 preserveScroll: true,
                 onSuccess: () => {
                     open.value = false;
                 },
-            });
+            },
+        );
 
         return;
     }
@@ -76,21 +77,21 @@ function submit() {
         return;
     }
 
-    form
-        .transform(() => payload)
-        .patch(
-            update.url({
-                workspace: props.workspaceId,
-                board: props.boardId,
-                column: props.column.id,
-            }),
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    open.value = false;
-                },
+    const version = props.column.version;
+
+    form.transform(() => ({ ...payload, version })).patch(
+        update.url({
+            workspace: props.workspaceId,
+            board: props.boardId,
+            column: props.column.id,
+        }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                open.value = false;
             },
-        );
+        },
+    );
 }
 </script>
 

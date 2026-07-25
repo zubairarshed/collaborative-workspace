@@ -78,6 +78,7 @@ test('owners admins and members can update boards', function (MembershipRole $ro
         ->patch(route('workspaces.boards.update', [$workspace, $board]), [
             'name' => 'Updated Name',
             'description' => 'Updated description',
+            'version' => $board->version,
         ])
         ->assertRedirect(route('workspaces.boards.show', [$workspace, $board]));
 
@@ -103,6 +104,7 @@ test('viewers cannot update boards', function () {
     $this->actingAs($viewer)
         ->patch(route('workspaces.boards.update', [$workspace, $board]), [
             'name' => 'Viewer Update',
+            'version' => $board->version,
         ])
         ->assertForbidden();
 

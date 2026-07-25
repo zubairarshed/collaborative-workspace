@@ -26,6 +26,7 @@ class UpdateBoardColumnRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'version' => ['required', 'integer', 'min:1'],
             'name' => [
                 'sometimes',
                 'required',

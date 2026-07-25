@@ -62,15 +62,20 @@ const editForm = useForm({
 });
 
 function submitEdit() {
-    editForm.put(
-        update.url({ workspace: props.workspace.id, board: props.board.slug }),
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                editOpen.value = false;
+    editForm
+        .transform((data) => ({ ...data, version: props.board.version }))
+        .put(
+            update.url({
+                workspace: props.workspace.id,
+                board: props.board.slug,
+            }),
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    editOpen.value = false;
+                },
             },
-        },
-    );
+        );
 }
 
 function toggleArchive() {
@@ -92,9 +97,7 @@ function toggleArchive() {
 
 function deleteBoard() {
     if (
-        !window.confirm(
-            `Delete "${props.board.name}"? This cannot be undone.`,
-        )
+        !window.confirm(`Delete "${props.board.name}"? This cannot be undone.`)
     ) {
         return;
     }
@@ -136,10 +139,7 @@ function deleteBoard() {
                     {{ board.description || 'No description provided.' }}
                 </p>
 
-                <p
-                    v-if="board.creator"
-                    class="text-xs text-muted-foreground"
-                >
+                <p v-if="board.creator" class="text-xs text-muted-foreground">
                     Created by {{ board.creator.name }}
                 </p>
             </div>
@@ -204,10 +204,7 @@ function deleteBoard() {
                     variant="outline"
                     @click="toggleArchive"
                 >
-                    <ArchiveRestore
-                        v-if="board.is_archived"
-                        class="size-4"
-                    />
+                    <ArchiveRestore v-if="board.is_archived" class="size-4" />
                     <Archive v-else class="size-4" />
                     {{ board.is_archived ? 'Restore' : 'Archive' }}
                 </Button>
@@ -226,6 +223,7 @@ function deleteBoard() {
         <ColumnsBoard
             :workspace-id="workspace.id"
             :board-id="board.id"
+            :board-version="board.version"
             :columns="columns"
             :members="members"
             :can="{

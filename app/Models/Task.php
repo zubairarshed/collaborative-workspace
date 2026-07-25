@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TaskPriority;
+use App\Models\Concerns\HasVersion;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasVersion, SoftDeletes;
 
     /**
      * @return array<string, string>
@@ -38,6 +39,7 @@ class Task extends Model
             'due_at' => 'datetime',
             'is_archived' => 'boolean',
             'position' => 'integer',
+            'version' => 'integer',
         ];
     }
 

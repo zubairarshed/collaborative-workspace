@@ -19,6 +19,7 @@ test('assigning a task notifies the assignee but not on self-assignment', functi
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
             'assignee_id' => $assignee->id,
+            'version' => $task->version,
         ])
         ->assertRedirect();
 
@@ -36,6 +37,7 @@ test('assigning a task notifies the assignee but not on self-assignment', functi
     $this->actingAs($owner)
         ->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $secondTask]), [
             'assignee_id' => $owner->id,
+            'version' => $secondTask->version,
         ])
         ->assertRedirect();
 
@@ -53,11 +55,13 @@ test('reassigning to the same person twice does not duplicate an unread notifica
 
     $this->actingAs($owner)->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
         'assignee_id' => $assignee->id,
+        'version' => $task->version,
     ])->assertRedirect();
 
     $this->actingAs($owner)->patch(route('workspaces.boards.tasks.update', [$workspace, $board, $task]), [
         'title' => 'Retitled, still assigned',
         'assignee_id' => $assignee->id,
+        'version' => $task->fresh()->version,
     ])->assertRedirect();
 
     expect(Notification::query()->where('user_id', $assignee->id)->where('type', NotificationType::TaskAssigned)->count())->toBe(1);
