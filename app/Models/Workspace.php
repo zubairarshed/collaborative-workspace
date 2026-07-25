@@ -21,6 +21,8 @@ class Workspace extends Model
 
     /**
      * Keep the owner's membership in sync with owner_id.
+     * Automatically runs after a workspace is created.
+     * Whenever a new workspace is created, the workspace owner is automatically added to the memberships table as an owner.
      */
     protected static function booted(): void
     {

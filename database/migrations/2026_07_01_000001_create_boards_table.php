@@ -24,6 +24,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->unique(['workspace_id', 'slug']);
+            // composite index, speeds up database queries that filter data by both columns simultaneously.
             $table->index(['workspace_id', 'is_archived']);
         });
     }
